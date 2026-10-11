@@ -1,0 +1,9 @@
+.venv/
+.coros_oauth.json
+data/
+app/demo.json
+app/demo_insights.json
+.env
+__pycache__/
+.pytest_cache/
+supabase/.temp/

@@ -1,0 +1,35 @@
+name: daily sleep plan
+
+on:
+  schedule:
+    # Every hour from 05:00 to 23:00 Israel time (UTC+2/+3). GitHub may start runs a few
+    # minutes late; each run is idempotent, so that's fine.
+    - cron: "0 2-21 * * *"
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: "Fetch the whole history (first run)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m pip install pytest && python -m pytest -q tests
+      - name: Update nights and plan tonight
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: python jobs/daily.py ${{ inputs.backfill && '--backfill' || '' }}
